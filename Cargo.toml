@@ -1,9 +1,12 @@
 [workspace]
+members = ["day01"]
 resolver = "2"
-members = ["day*"]
 
 [workspace.dependencies]
-thiserror = "2.0.11"
 itertools = "0.14.0"
 rayon = "1.10.0"
-criterion = { version = "0.7.0", features = ["html_reports"] }
+thiserror = "2.0.11"
+
+[workspace.dependencies.criterion]
+version = "0.8.0"
+features = ["html_reports"]
