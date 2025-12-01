@@ -6,9 +6,9 @@ My [Advent of Code 2025](https://adventofcode.com/2025) solutions in the Rust pr
 
 To run the code for a given day use the following commands:
 
-`cargo run -r -p day12 --bin part1`
+`cargo run -r --bin day12_part1`
 
-`cargo run -r -p day12 --bin part2`
+`cargo run -r --bin day12_part2`
 
 ## Running Unit Tests
 
