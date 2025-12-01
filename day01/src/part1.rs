@@ -4,10 +4,13 @@ use thiserror::Error;
 pub enum Error {
     #[error("Error parsing input: {0}")]
     ParsingError(#[from] std::num::ParseIntError),
-    #[error("Invalid direction: {0}")]
-    InvalidDirection(char),
-    #[error("Empty line encountered")]
-    EmptyLine,
+    #[error("Invalid movement: {0}")]
+    InvalidMovement(String),
+}
+
+enum Movement {
+    Left(i32),
+    Right(i32),
 }
 
 pub fn solve(input: &str) -> Result<usize, Error> {
@@ -15,22 +18,12 @@ pub fn solve(input: &str) -> Result<usize, Error> {
     let mut dial = 50;
 
     for line in input.lines() {
-        match line.chars().next() {
-            Some('L') => {
-                dial -= line[1..].parse::<i32>()? % 100;
-                if dial < 0 {
-                    dial += 100;
-                }
+        match parse_line(line)? {
+            Movement::Left(ticks) => {
+                dial = (dial - ticks).rem_euclid(100);
             }
-            Some('R') => {
-                dial += line[1..].parse::<i32>()?;
-                dial %= 100;
-            }
-            Some(ch) => {
-                return Err(Error::InvalidDirection(ch));
-            }
-            None => {
-                return Err(Error::EmptyLine);
+            Movement::Right(ticks) => {
+                dial = (dial + ticks).rem_euclid(100);
             }
         }
 
@@ -40,6 +33,14 @@ pub fn solve(input: &str) -> Result<usize, Error> {
     }
 
     Ok(count)
+}
+
+fn parse_line(line: &str) -> Result<Movement, Error> {
+    match line.split_at_checked(1) {
+        Some(("L", ticks)) => Ok(Movement::Left(ticks.parse()?)),
+        Some(("R", ticks)) => Ok(Movement::Right(ticks.parse()?)),
+        _ => Err(Error::InvalidMovement(line.to_owned())),
+    }
 }
 
 #[cfg(test)]

@@ -4,48 +4,46 @@ use thiserror::Error;
 pub enum Error {
     #[error("Error parsing input: {0}")]
     ParsingError(#[from] std::num::ParseIntError),
-    #[error("Invalid direction: {0}")]
-    InvalidDirection(char),
-    #[error("Empty line encountered")]
-    EmptyLine,
+    #[error("Invalid movement: {0}")]
+    InvalidMovement(String),
 }
 
-pub fn solve(input: &str) -> Result<usize, Error> {
+enum Movement {
+    Left(i32),
+    Right(i32),
+}
+
+pub fn solve(input: &str) -> Result<i32, Error> {
     let mut count = 0;
     let mut dial = 50;
 
     for line in input.lines() {
-        match line.chars().next() {
-            Some('L') => {
-                if dial == 0 {
-                    count -= 1;
-                }
-                dial -= line[1..].parse::<i32>()?;
-                while dial < 0 {
-                    dial += 100;
+        match parse_line(line)? {
+            Movement::Left(ticks) => {
+                count += ticks / 100;
+                let n = dial - (ticks % 100);
+                if dial != 0 && n <= 0 {
                     count += 1;
                 }
-                if dial == 0 {
-                    count += 1;
-                }
+                dial = if n < 0 { n + 100 } else { n };
             }
-            Some('R') => {
-                dial += line[1..].parse::<i32>()?;
-                while dial >= 100 {
-                    dial -= 100;
-                    count += 1;
-                }
-            }
-            Some(ch) => {
-                return Err(Error::InvalidDirection(ch));
-            }
-            None => {
-                return Err(Error::EmptyLine);
+            Movement::Right(ticks) => {
+                let n = dial + ticks;
+                count += n / 100;
+                dial = n % 100;
             }
         }
     }
 
     Ok(count)
+}
+
+fn parse_line(line: &str) -> Result<Movement, Error> {
+    match line.split_at_checked(1) {
+        Some(("L", ticks)) => Ok(Movement::Left(ticks.parse()?)),
+        Some(("R", ticks)) => Ok(Movement::Right(ticks.parse()?)),
+        _ => Err(Error::InvalidMovement(line.to_owned())),
+    }
 }
 
 #[cfg(test)]
