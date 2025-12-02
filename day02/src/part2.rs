@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use rayon::prelude::*;
 use std::ops::{Range, RangeInclusive};
 use thiserror::Error;
 
@@ -64,6 +65,13 @@ const ID_VALIDATORS: &[(Range<u64>, &[u64])] = &[
 ];
 
 pub fn solve(input: &str) -> Result<u64, Error> {
+    input
+        .par_split(',')
+        .map(|r| Ok(parse_range(r)?.filter(invalid_id).sum::<u64>()))
+        .sum()
+}
+
+pub fn solve_no_rayon(input: &str) -> Result<u64, Error> {
     input
         .split(',')
         .map(parse_range)
