@@ -1,3 +1,5 @@
+use itertools::Itertools;
+use std::ops::RangeInclusive;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -9,15 +11,18 @@ pub enum Error {
 pub fn solve(input: &str) -> Result<usize, Error> {
     input
         .split(',')
-        .try_fold(0, |acc, range| Ok(acc + process_range(range)?))
+        .map(parse_range)
+        .flatten_ok()
+        .filter_ok(invalid_id)
+        .sum()
 }
 
-fn process_range(range: &str) -> Result<usize, Error> {
+fn parse_range(range: &str) -> Result<RangeInclusive<usize>, Error> {
     let range = range.trim();
     let (start, end) = range.split_once('-').unwrap();
     let start: usize = start.parse()?;
     let end: usize = end.parse()?;
-    Ok((start..=end).filter(invalid_id).sum())
+    Ok(start..=end)
 }
 
 fn invalid_id(id: &usize) -> bool {

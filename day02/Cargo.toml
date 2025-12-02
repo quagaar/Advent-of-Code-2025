@@ -9,6 +9,7 @@ edition = "2024"
 doctest = false
 
 [dependencies]
+itertools.workspace = true
 thiserror.workspace = true
 
 [dev-dependencies]
