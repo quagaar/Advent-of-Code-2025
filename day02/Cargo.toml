@@ -13,7 +13,9 @@ itertools.workspace = true
 thiserror.workspace = true
 
 [dev-dependencies]
-criterion = { workspace = true }
+criterion.workspace = true
+rstest.workspace = true
+rstest_reuse.workspace = true
 
 [[bench]]
 name = "benchmark"
