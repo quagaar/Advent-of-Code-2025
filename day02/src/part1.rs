@@ -110,6 +110,12 @@ mod tests {
         assert_eq!(result, 1227775554);
     }
 
+    #[test]
+    fn example_by_string() {
+        let result = solve_by_string(EXAMPLE).unwrap();
+        assert_eq!(result, 1227775554);
+    }
+
     #[cfg(input_txt)]
     #[cfg(part1_txt)]
     #[test]
