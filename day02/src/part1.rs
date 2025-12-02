@@ -8,7 +8,7 @@ pub enum Error {
     ParsingError(#[from] std::num::ParseIntError),
 }
 
-const ID_VALIDATORS: &[(Range<usize>, usize)] = &[
+const ID_VALIDATORS: &[(Range<u64>, u64)] = &[
     (10..100, 11),
     (1000..10_000, 101),
     (100_000..1_000_000, 1001),
@@ -21,10 +21,10 @@ const ID_VALIDATORS: &[(Range<usize>, usize)] = &[
         100_000_000_000_000_000..1_000_000_000_000_000_000,
         1000000001,
     ),
-    (10_000_000_000_000_000_000..usize::MAX, 10000000001),
+    (10_000_000_000_000_000_000..u64::MAX, 10000000001),
 ];
 
-pub fn solve(input: &str) -> Result<usize, Error> {
+pub fn solve(input: &str) -> Result<u64, Error> {
     input
         .split(',')
         .map(parse_range)
@@ -33,7 +33,7 @@ pub fn solve(input: &str) -> Result<usize, Error> {
         .sum()
 }
 
-pub fn solve_by_string(input: &str) -> Result<usize, Error> {
+pub fn solve_by_string(input: &str) -> Result<u64, Error> {
     input
         .split(',')
         .map(parse_range)
@@ -42,22 +42,22 @@ pub fn solve_by_string(input: &str) -> Result<usize, Error> {
         .sum()
 }
 
-fn parse_range(range: &str) -> Result<RangeInclusive<usize>, Error> {
+fn parse_range(range: &str) -> Result<RangeInclusive<u64>, Error> {
     let range = range.trim();
     let (start, end) = range.split_once('-').unwrap();
-    let start: usize = start.parse()?;
-    let end: usize = end.parse()?;
+    let start: u64 = start.parse()?;
+    let end: u64 = end.parse()?;
     Ok(start..=end)
 }
 
-fn invalid_id(id: &usize) -> bool {
+fn invalid_id(id: &u64) -> bool {
     ID_VALIDATORS
         .iter()
         .find(|(range, _)| range.contains(id))
         .is_some_and(|(_, divisor)| id.is_multiple_of(*divisor))
 }
 
-fn invalid_id_by_string(id: &usize) -> bool {
+fn invalid_id_by_string(id: &u64) -> bool {
     let digits = id.to_string();
     let mid = digits.len() / 2;
     let (left, right) = digits.split_at(mid);
@@ -90,16 +90,16 @@ mod tests {
     #[case(7777777, false)]
     #[case(123454321, false)]
     #[case(1234554321, false)]
-    fn id_validator_cases(#[case] id: usize, #[case] expected: bool) {}
+    fn id_validator_cases(#[case] id: u64, #[case] expected: bool) {}
 
     #[apply(id_validator_cases)]
-    fn id_validator(#[case] id: usize, #[case] expected: bool) {
+    fn id_validator(#[case] id: u64, #[case] expected: bool) {
         let result = invalid_id(&id);
         assert_eq!(result, expected);
     }
 
     #[apply(id_validator_cases)]
-    fn id_validator_by_string(#[case] id: usize, #[case] expected: bool) {
+    fn id_validator_by_string(#[case] id: u64, #[case] expected: bool) {
         let result = invalid_id_by_string(&id);
         assert_eq!(result, expected);
     }

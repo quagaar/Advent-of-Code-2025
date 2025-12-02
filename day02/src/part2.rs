@@ -8,7 +8,7 @@ pub enum Error {
     ParsingError(#[from] std::num::ParseIntError),
 }
 
-const ID_VALIDATORS: &[(Range<usize>, &[usize])] = &[
+const ID_VALIDATORS: &[(Range<u64>, &[u64])] = &[
     (10..100, &[11]),
     (100..1000, &[111]),
     (1000..10_000, &[1111, 101]),
@@ -52,7 +52,7 @@ const ID_VALIDATORS: &[(Range<usize>, &[usize])] = &[
         &[1111111111111111111],
     ),
     (
-        10_000_000_000_000_000_000..usize::MAX,
+        10_000_000_000_000_000_000..u64::MAX,
         &[
             11111111111111111111,
             1010101010101010101,
@@ -63,7 +63,7 @@ const ID_VALIDATORS: &[(Range<usize>, &[usize])] = &[
     ),
 ];
 
-pub fn solve(input: &str) -> Result<usize, Error> {
+pub fn solve(input: &str) -> Result<u64, Error> {
     input
         .split(',')
         .map(parse_range)
@@ -72,7 +72,7 @@ pub fn solve(input: &str) -> Result<usize, Error> {
         .sum()
 }
 
-pub fn solve_by_string(input: &str) -> Result<usize, Error> {
+pub fn solve_by_string(input: &str) -> Result<u64, Error> {
     input
         .split(',')
         .map(parse_range)
@@ -81,22 +81,22 @@ pub fn solve_by_string(input: &str) -> Result<usize, Error> {
         .sum()
 }
 
-fn parse_range(range: &str) -> Result<RangeInclusive<usize>, Error> {
+fn parse_range(range: &str) -> Result<RangeInclusive<u64>, Error> {
     let range = range.trim();
     let (start, end) = range.split_once('-').unwrap();
-    let start: usize = start.parse()?;
-    let end: usize = end.parse()?;
+    let start: u64 = start.parse()?;
+    let end: u64 = end.parse()?;
     Ok(start..=end)
 }
 
-fn invalid_id(id: &usize) -> bool {
+fn invalid_id(id: &u64) -> bool {
     ID_VALIDATORS
         .iter()
         .find(|(range, _)| range.contains(id))
         .is_some_and(|(_, divisors)| divisors.iter().any(|divisor| id.is_multiple_of(*divisor)))
 }
 
-fn invalid_id_by_string(id: &usize) -> bool {
+fn invalid_id_by_string(id: &u64) -> bool {
     let digits = id.to_string();
     let len = digits.len();
     for n in 1..=(len / 2) {
@@ -169,16 +169,16 @@ mod tests {
     #[case(12, false)]
     #[case(123454321, false)]
     #[case(1234554321, false)]
-    fn id_validator_cases(#[case] id: usize, #[case] expected: bool) {}
+    fn id_validator_cases(#[case] id: u64, #[case] expected: bool) {}
 
     #[apply(id_validator_cases)]
-    fn id_validator(#[case] id: usize, #[case] expected: bool) {
+    fn id_validator(#[case] id: u64, #[case] expected: bool) {
         let result = invalid_id(&id);
         assert_eq!(result, expected);
     }
 
     #[apply(id_validator_cases)]
-    fn id_validator_by_string(#[case] id: usize, #[case] expected: bool) {
+    fn id_validator_by_string(#[case] id: u64, #[case] expected: bool) {
         let result = invalid_id_by_string(&id);
         assert_eq!(result, expected);
     }
