@@ -12,7 +12,7 @@ pub fn solve(input: &str) -> Result<usize, Error> {
 
     for (y, row) in grid.iter().enumerate() {
         for (x, &cell) in row.iter().enumerate() {
-            if cell == b'@' && count_rolls_in_area(&grid, x, y) < 4 + 1 {
+            if cell == b'@' && count_adjacent(&grid, x, y) < 4 {
                 accessible += 1;
             }
         }
@@ -21,13 +21,21 @@ pub fn solve(input: &str) -> Result<usize, Error> {
     Ok(accessible)
 }
 
-/// Count the number of rolls ('@') in the 3x3 area centered at (x, y)
-/// including the cell at (x, y) itself.
-fn count_rolls_in_area(grid: &[&[u8]], x: usize, y: usize) -> usize {
-    grid.iter()
-        .take(y + 2)
-        .skip(y.saturating_sub(1))
-        .flat_map(|row| row.iter().take(x + 2).skip(x.saturating_sub(1)))
+const ADJACENT: &[(isize, &[isize])] = &[(-1, &[-1, 0, 1]), (0, &[-1, 1]), (1, &[-1, 0, 1])];
+
+/// Count the number of rolls ('@') adjacent to (x, y)
+/// (horizontally, vertically, and diagonally).
+fn count_adjacent(grid: &[&[u8]], x: usize, y: usize) -> usize {
+    ADJACENT
+        .iter()
+        .filter_map(|(dy, dxs)| {
+            y.checked_add_signed(*dy)
+                .and_then(|y| grid.get(y).map(|row| (row, dxs)))
+        })
+        .flat_map(|(row, dxs)| {
+            dxs.iter()
+                .filter_map(|&dx| x.checked_add_signed(dx).and_then(|x| row.get(x)))
+        })
         .filter(|&&cell| cell == b'@')
         .count()
 }
