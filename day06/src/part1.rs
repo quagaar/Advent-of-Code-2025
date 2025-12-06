@@ -1,5 +1,3 @@
-use std::num::ParseIntError;
-
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -8,41 +6,28 @@ pub enum Error {
     ParsingError(#[from] std::num::ParseIntError),
     #[error("Invalid operator: {0}")]
     InvalidOperator(String),
-    #[error("Missing operator")]
-    MissingOperator,
+    #[error("No operators found in input")]
+    NoOperators,
 }
 
 pub fn solve(input: &str) -> Result<u64, Error> {
-    input
+    let mut rows = input
         .lines()
         .map(&str::split_ascii_whitespace)
-        .fold(Vec::<Vec<&str>>::new(), |mut acc, columns| {
-            for (index, value) in columns.enumerate() {
-                if let Some(x) = acc.get_mut(index) {
-                    x.push(value);
-                } else {
-                    acc.push(vec![value]);
-                }
-            }
-            acc
-        })
-        .into_iter()
-        .map(|problem| {
-            let mut it = problem.into_iter().rev();
-            match it.next() {
-                Some("+") => it
-                    .map(&str::parse::<u64>)
-                    .sum::<Result<u64, ParseIntError>>()
-                    .map_err(Error::from),
-                Some("*") => it
-                    .map(&str::parse::<u64>)
-                    .product::<Result<u64, ParseIntError>>()
-                    .map_err(Error::from),
-                Some(op) => Err(Error::InvalidOperator(op.to_owned())),
-                None => Err(Error::MissingOperator),
-            }
-        })
-        .sum()
+        .collect::<Vec<_>>();
+    let ops = rows.pop().ok_or(Error::NoOperators)?;
+    ops.map(|op| {
+        let numbers = rows
+            .iter_mut()
+            .filter_map(|row| row.next())
+            .map(|s| s.parse::<u64>().map_err(Error::from));
+        match op {
+            "+" => numbers.sum::<Result<u64, Error>>(),
+            "*" => numbers.product::<Result<u64, Error>>(),
+            _ => Err(Error::InvalidOperator(op.to_owned())),
+        }
+    })
+    .sum()
 }
 
 #[cfg(test)]
