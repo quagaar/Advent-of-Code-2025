@@ -30,7 +30,7 @@ pub fn solve(input: &str, pairs: usize) -> Result<usize, Error> {
             (i, j, distance)
         })
         .collect_vec();
-    distances.sort_by_key(|&(_, _, distance)| distance);
+    distances.sort_unstable_by_key(|&(_, _, distance)| distance);
     let circuits = distances.into_iter().take(pairs).fold(
         Vec::new(),
         |mut acc: Vec<Vec<usize>>, (i, j, _)| {

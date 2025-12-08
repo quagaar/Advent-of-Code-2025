@@ -30,7 +30,7 @@ pub fn solve(input: &str) -> Result<i64, Error> {
             (i, j, distance)
         })
         .collect_vec();
-    distances.sort_by_key(|&(_, _, distance)| distance);
+    distances.sort_unstable_by_key(|&(_, _, distance)| distance);
     let mut circuits: Vec<Vec<usize>> = Vec::new();
     for (i, j, _) in distances.into_iter() {
         let a = circuits.iter().position(|circuit| circuit.contains(&i));
