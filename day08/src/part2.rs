@@ -22,10 +22,8 @@ pub fn solve(input: &str) -> Result<i64, Error> {
     let mut distances = junction_boxes
         .iter()
         .enumerate()
-        .combinations(2)
-        .map(|pair| {
-            let (i, box_a) = pair[0];
-            let (j, box_b) = pair[1];
+        .tuple_combinations()
+        .map(|((i, box_a), (j, box_b))| {
             let distance = box_a.distance_squared(*box_b);
             (i, j, distance)
         })
