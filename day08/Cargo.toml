@@ -9,7 +9,7 @@ edition = "2024"
 doctest = false
 
 [dependencies]
-glam = "0.30.9"
+glam.workspace = true
 itertools.workspace = true
 thiserror.workspace = true
 
