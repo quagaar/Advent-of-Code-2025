@@ -25,40 +25,41 @@ pub fn solve(input: &str, pairs: usize) -> Result<usize, Error> {
         .tuple_combinations()
         .map(|((i, box_a), (j, box_b))| {
             let distance = box_a.distance_squared(*box_b);
-            (i, j, distance)
+            (i as u32, j as u32, distance)
         })
         .collect_vec();
     distances.sort_unstable_by_key(|&(_, _, distance)| distance);
-    let circuits = distances.into_iter().take(pairs).fold(
-        Vec::new(),
-        |mut acc: Vec<Vec<usize>>, (i, j, _)| {
-            let a = acc.iter().position(|circuit| circuit.contains(&i));
-            let b = acc.iter().position(|circuit| circuit.contains(&j));
-            match (a, b) {
-                (None, None) => {
-                    acc.push(vec![i, j]);
+    let circuits =
+        distances
+            .into_iter()
+            .take(pairs)
+            .fold(Vec::new(), |mut acc: Vec<Vec<u32>>, (i, j, _)| {
+                let a = acc.iter().position(|circuit| circuit.contains(&i));
+                let b = acc.iter().position(|circuit| circuit.contains(&j));
+                match (a, b) {
+                    (None, None) => {
+                        acc.push(vec![i, j]);
+                    }
+                    (Some(a), None) => {
+                        acc[a].push(j);
+                    }
+                    (None, Some(b)) => {
+                        acc[b].push(i);
+                    }
+                    (Some(a), Some(b)) if a < b => {
+                        let mut other = acc.remove(b);
+                        acc[a].append(&mut other);
+                    }
+                    (Some(a), Some(b)) if a > b => {
+                        let mut other = acc.remove(a);
+                        acc[b].append(&mut other);
+                    }
+                    _ => {
+                        // both already in the same circuit, do nothing
+                    }
                 }
-                (Some(a), None) => {
-                    acc[a].push(j);
-                }
-                (None, Some(b)) => {
-                    acc[b].push(i);
-                }
-                (Some(a), Some(b)) if a < b => {
-                    let mut other = acc.remove(b);
-                    acc[a].append(&mut other);
-                }
-                (Some(a), Some(b)) if a > b => {
-                    let mut other = acc.remove(a);
-                    acc[b].append(&mut other);
-                }
-                _ => {
-                    // both already in the same circuit, do nothing
-                }
-            }
-            acc
-        },
-    );
+                acc
+            });
     Ok(circuits
         .into_iter()
         .map(|v| v.len())

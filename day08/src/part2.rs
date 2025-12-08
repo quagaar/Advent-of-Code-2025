@@ -25,11 +25,11 @@ pub fn solve(input: &str) -> Result<i64, Error> {
         .tuple_combinations()
         .map(|((i, box_a), (j, box_b))| {
             let distance = box_a.distance_squared(*box_b);
-            (i, j, distance)
+            (i as u32, j as u32, distance)
         })
         .collect_vec();
     distances.sort_unstable_by_key(|&(_, _, distance)| distance);
-    let mut circuits: Vec<Vec<usize>> = Vec::new();
+    let mut circuits: Vec<Vec<u32>> = Vec::new();
     for (i, j, _) in distances.into_iter() {
         let a = circuits.iter().position(|circuit| circuit.contains(&i));
         let b = circuits.iter().position(|circuit| circuit.contains(&j));
@@ -56,7 +56,7 @@ pub fn solve(input: &str) -> Result<i64, Error> {
             }
         }
         if circuits.len() == 1 && circuits[0].len() == junction_boxes.len() {
-            return Ok(junction_boxes[i].x * junction_boxes[j].x);
+            return Ok(junction_boxes[i as usize].x * junction_boxes[j as usize].x);
         }
     }
     unreachable!("Should not reach here");
