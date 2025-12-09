@@ -1,0 +1,21 @@
+[package]
+name = "day09"
+version = "0.1.0"
+edition = "2024"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+doctest = false
+
+[dependencies]
+glam.workspace = true
+itertools.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+criterion = { workspace = true }
+
+[[bench]]
+name = "benchmark"
+harness = false
