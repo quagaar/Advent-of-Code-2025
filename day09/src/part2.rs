@@ -14,35 +14,38 @@ pub enum Error {
 
 pub fn solve(input: &str) -> Result<u64, Error> {
     let coords: Vec<_> = input.lines().map(parse_line).try_collect()?;
+    let (mut horizontal_lines, mut vertical_lines) = coords.iter().circular_tuple_windows().fold(
+        (Vec::new(), Vec::new()),
+        |(mut h_lines, mut v_lines), (p1, p2)| {
+            if p1.x == p2.x {
+                v_lines.push((p1.x, p1.y.min(p2.y), p1.y.max(p2.y)));
+            } else if p1.y == p2.y {
+                h_lines.push((p1.y, p1.x.min(p2.x), p1.x.max(p2.x)));
+            }
+            (h_lines, v_lines)
+        },
+    );
+    horizontal_lines.sort_unstable();
+    vertical_lines.sort_unstable();
     coords
-        .iter()
+        .into_iter()
         .tuple_combinations()
         .filter(|(p1, p2)| {
             // Check if there are no other lines crossing rectangle formed by p1 and p2
-            let x_range = if p1.x > p2.x {
-                p2.x + 1..p1.x
-            } else {
-                p1.x + 1..p2.x
-            };
-            let y_range = if p1.y > p2.y {
-                p2.y + 1..p1.y
-            } else {
-                p1.y + 1..p2.y
-            };
-            !coords.iter().circular_tuple_windows().any(|(a, b)| {
-                // Check if line segment (a, b) crosses the rectangle
-                if a.x == b.x {
-                    // vertical line
-                    x_range.contains(&a.x)
-                        && a.y.min(b.y) < y_range.end
-                        && a.y.max(b.y) >= y_range.start
-                } else {
-                    // horizontal line
-                    y_range.contains(&a.y)
-                        && a.x.min(b.x) < x_range.end
-                        && a.x.max(b.x) >= x_range.start
-                }
-            })
+            let x_min = p1.x.min(p2.x);
+            let x_max = p1.x.max(p2.x);
+            let y_min = p1.y.min(p2.y);
+            let y_max = p1.y.max(p2.y);
+            !horizontal_lines
+                .iter()
+                .skip_while(|(y, _, _)| *y <= y_min)
+                .take_while(|(y, _, _)| *y < y_max)
+                .any(|(_, x1, x2)| *x1 < x_max && *x2 > x_min)
+                && !vertical_lines
+                    .iter()
+                    .skip_while(|(x, _, _)| *x <= x_min)
+                    .take_while(|(x, _, _)| *x < x_max)
+                    .any(|(_, y1, y2)| *y1 < y_max && *y2 > y_min)
         })
         .map(|(p1, p2)| {
             let w = p1.x.abs_diff(p2.x) + 1;
