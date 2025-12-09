@@ -9,7 +9,7 @@ fn main() {
     );
     print!("{}", INPUT);
     println!(
-        r#"" stroke="white" stroke-width="400" fill="none" />
+        r#"" stroke="red" stroke-width="400" fill="green" />
 </svg>
 "#
     );
