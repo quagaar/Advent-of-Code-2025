@@ -11,32 +11,52 @@ pub enum Error {
     UnableToReachTarget,
 }
 
-pub fn solve(input: &str) -> Result<usize, Error> {
+pub fn solve(input: &str) -> Result<u16, Error> {
     input.par_lines().map(process_line).sum()
 }
 
-fn process_line(line: &str) -> Result<usize, Error> {
+fn process_line(line: &str) -> Result<u16, Error> {
     let (buttons, target_joltages) = parse_line(line)?;
-    dfs(&vec![0; target_joltages.len()], &target_joltages, &buttons)
-        .ok_or(Error::UnableToReachTarget)
+    dfs(
+        &vec![0; target_joltages.len()],
+        &target_joltages,
+        &buttons,
+        0,
+        u16::MAX,
+    )
+    .ok_or(Error::UnableToReachTarget)
 }
 
-fn dfs(joltages: &[u16], target: &[u16], buttons: &[Vec<usize>]) -> Option<usize> {
-    if joltages.iter().zip(target).all(|(a, b)| a == b) {
-        Some(0)
-    } else if joltages.iter().zip(target).any(|(a, b)| a > b) {
-        None
+fn dfs(
+    joltages: &[u16],
+    target: &[u16],
+    buttons: &[Vec<usize>],
+    count: u16,
+    mut best: u16,
+) -> Option<u16> {
+    if let Some(button) = buttons.first() {
+        for n in 0.. {
+            let mut next_joltages = joltages.to_vec();
+            for &i in button {
+                next_joltages[i] += n;
+            }
+
+            if count + n >= best {
+                break;
+            } else if next_joltages.iter().zip(target).all(|(a, b)| a == b) {
+                best = count + n;
+                break;
+            } else if next_joltages.iter().zip(target).any(|(a, b)| a > b) {
+                break;
+            } else if let Some(steps) = dfs(&next_joltages, target, &buttons[1..], count + n, best)
+                && steps < best
+            {
+                best = steps;
+            }
+        }
+        if best == u16::MAX { None } else { Some(best) }
     } else {
-        buttons
-            .iter()
-            .filter_map(|button| {
-                let mut next_joltages = joltages.to_vec();
-                for &i in button {
-                    next_joltages[i] += 1;
-                }
-                dfs(&next_joltages, target, buttons).map(|steps| steps + 1)
-            })
-            .min()
+        None
     }
 }
 
