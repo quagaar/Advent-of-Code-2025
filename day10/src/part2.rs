@@ -1,5 +1,4 @@
-use std::collections::{HashSet, VecDeque};
-
+use rayon::prelude::*;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -13,39 +12,32 @@ pub enum Error {
 }
 
 pub fn solve(input: &str) -> Result<usize, Error> {
-    input.lines().map(process_line).sum()
+    input.par_lines().map(process_line).sum()
 }
 
 fn process_line(line: &str) -> Result<usize, Error> {
     let (buttons, target_joltages) = parse_line(line)?;
-    let mut visited = HashSet::new();
-    let mut states = VecDeque::from([(vec![0; target_joltages.len()], 0usize)]);
-    while let Some((state, presses)) = states.pop_front() {
-        if visited.insert(state.clone()) {
-            if state == target_joltages {
-                return Ok(presses);
-            }
-            for button in buttons.iter() {
-                if let Some(next_state) = button.iter().try_fold(state.clone(), |mut acc, &i| {
-                    if let Some(j) = acc.get_mut(i) {
-                        *j += 1;
-                        if let Some(t) = target_joltages.get(i)
-                            && t >= j
-                        {
-                            Some(acc)
-                        } else {
-                            None
-                        }
-                    } else {
-                        None
-                    }
-                }) {
-                    states.push_back((next_state, presses + 1));
+    dfs(&vec![0; target_joltages.len()], &target_joltages, &buttons)
+        .ok_or(Error::UnableToReachTarget)
+}
+
+fn dfs(joltages: &[u16], target: &[u16], buttons: &[Vec<usize>]) -> Option<usize> {
+    if joltages.iter().zip(target).all(|(a, b)| a == b) {
+        Some(0)
+    } else if joltages.iter().zip(target).any(|(a, b)| a > b) {
+        None
+    } else {
+        buttons
+            .iter()
+            .filter_map(|button| {
+                let mut next_joltages = joltages.to_vec();
+                for &i in button {
+                    next_joltages[i] += 1;
                 }
-            }
-        }
+                dfs(&next_joltages, target, buttons).map(|steps| steps + 1)
+            })
+            .min()
     }
-    Err(Error::UnableToReachTarget)
 }
 
 fn parse_line(line: &str) -> Result<(Vec<Vec<usize>>, Vec<u16>), Error> {
