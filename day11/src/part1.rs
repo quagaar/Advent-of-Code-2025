@@ -4,8 +4,6 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum Error {
-    #[error("Error parsing input: {0}")]
-    ParsingError(#[from] std::num::ParseIntError),
     #[error("Missing delimiter {0}")]
     MissingDelimiter(&'static str),
 }
