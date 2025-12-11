@@ -1,4 +1,5 @@
-use std::collections::{HashMap, HashSet};
+use pathfinding::prelude::*;
+use std::collections::HashMap;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -12,34 +13,48 @@ pub fn solve(input: &str) -> Result<usize, Error> {
         .lines()
         .map(parse_line)
         .collect::<Result<HashMap<_, _>, _>>()?;
-    let mut visited = HashSet::new();
-    Ok(dfs(&devices, "svr", false, false, &mut visited))
-}
-
-fn dfs<'a>(
-    devices: &HashMap<&str, Vec<&'a str>>,
-    node: &'a str,
-    found_fft: bool,
-    found_dac: bool,
-    visited: &mut HashSet<&'a str>,
-) -> usize {
-    if node == "out" {
-        if found_fft && found_dac { 1 } else { 0 }
-    } else if let Some(next) = devices.get(node) {
-        if visited.insert(node) {
-            let found_fft = found_fft || node == "fft";
-            let found_dac = found_dac || node == "dac";
-            let routes = next
+    let empty = Vec::new();
+    let fft_paths = count_paths(
+        &"svr",
+        |&d| {
+            devices
+                .get(d)
+                .unwrap_or(&empty)
                 .iter()
-                .map(|&next| dfs(devices, next, found_fft, found_dac, visited))
-                .sum();
-            visited.remove(node);
-            routes
-        } else {
-            0
-        }
+                .filter(|&&d| d != "dac")
+        },
+        |&d| d == &"fft",
+    );
+
+    if fft_paths > 0 {
+        let dac_paths = count_paths(
+            &"fft",
+            |&d| devices.get(d).unwrap_or(&empty),
+            |&d| d == &"dac",
+        );
+        let out_paths = count_paths(
+            &"dac",
+            |&d| devices.get(d).unwrap_or(&empty),
+            |&d| d == &"out",
+        );
+        Ok(fft_paths * dac_paths * out_paths)
     } else {
-        0
+        let dac_paths = count_paths(
+            &"svr",
+            |&d| devices.get(d).unwrap_or(&empty),
+            |&d| d == &"dac",
+        );
+        let fft_paths = count_paths(
+            &"dac",
+            |&d| devices.get(d).unwrap_or(&empty),
+            |&d| d == &"fft",
+        );
+        let out_paths = count_paths(
+            &"fft",
+            |&d| devices.get(d).unwrap_or(&empty),
+            |&d| d == &"out",
+        );
+        Ok(dac_paths * fft_paths * out_paths)
     }
 }
 
