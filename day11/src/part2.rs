@@ -14,46 +14,21 @@ pub fn solve(input: &str) -> Result<usize, Error> {
         .map(parse_line)
         .collect::<Result<HashMap<_, _>, _>>()?;
     let empty = Vec::new();
+    let successors = |&d| devices.get(d).unwrap_or(&empty);
     let fft_paths = count_paths(
         &"svr",
-        |&d| {
-            devices
-                .get(d)
-                .unwrap_or(&empty)
-                .iter()
-                .filter(|&&d| d != "dac")
-        },
+        |&d| successors(d).iter().filter(|&&d| d != "dac"),
         |&d| d == &"fft",
     );
 
     if fft_paths > 0 {
-        let dac_paths = count_paths(
-            &"fft",
-            |&d| devices.get(d).unwrap_or(&empty),
-            |&d| d == &"dac",
-        );
-        let out_paths = count_paths(
-            &"dac",
-            |&d| devices.get(d).unwrap_or(&empty),
-            |&d| d == &"out",
-        );
+        let dac_paths = count_paths(&"fft", |&d| successors(d), |&d| d == &"dac");
+        let out_paths = count_paths(&"dac", |&d| successors(d), |&d| d == &"out");
         Ok(fft_paths * dac_paths * out_paths)
     } else {
-        let dac_paths = count_paths(
-            &"svr",
-            |&d| devices.get(d).unwrap_or(&empty),
-            |&d| d == &"dac",
-        );
-        let fft_paths = count_paths(
-            &"dac",
-            |&d| devices.get(d).unwrap_or(&empty),
-            |&d| d == &"fft",
-        );
-        let out_paths = count_paths(
-            &"fft",
-            |&d| devices.get(d).unwrap_or(&empty),
-            |&d| d == &"out",
-        );
+        let dac_paths = count_paths(&"svr", |&d| successors(d), |&d| d == &"dac");
+        let fft_paths = count_paths(&"dac", |&d| successors(d), |&d| d == &"fft");
+        let out_paths = count_paths(&"fft", |&d| successors(d), |&d| d == &"out");
         Ok(dac_paths * fft_paths * out_paths)
     }
 }
