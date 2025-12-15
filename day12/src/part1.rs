@@ -70,28 +70,47 @@ fn can_fit_recursive(shapes: &[Shape], counts: &mut [usize], grid: &mut Grid<u8>
         return true;
     }
 
-    for shape_index in 0..counts.len() {
-        if counts[shape_index] == 0 {
-            continue;
-        }
-        let shape = &shapes[shape_index];
-        for variant in &shape.variants {
-            for y in 0..=grid.rows() - 3 {
-                for x in 0..=grid.cols() - 3 {
-                    if can_place_shape(grid, variant, x, y) {
-                        place_shape(grid, variant, x, y, b'#');
-                        counts[shape_index] -= 1;
-                        if can_fit_recursive(shapes, counts, grid) {
-                            return true;
+    for y in 0..=grid.rows() - 3 {
+        for x in 0..=grid.cols() - 3 {
+            if valid_location_to_try(grid, x, y) {
+                for shape_index in 0..counts.len() {
+                    if counts[shape_index] == 0 {
+                        continue;
+                    }
+                    let shape = &shapes[shape_index];
+                    for variant in &shape.variants {
+                        if can_place_shape(grid, variant, x, y) {
+                            place_shape(grid, variant, x, y, b'#');
+                            counts[shape_index] -= 1;
+                            if can_fit_recursive(shapes, counts, grid) {
+                                return true;
+                            }
+                            counts[shape_index] += 1;
+                            place_shape(grid, variant, x, y, b'.');
                         }
-                        counts[shape_index] += 1;
-                        place_shape(grid, variant, x, y, b'.');
                     }
                 }
             }
         }
     }
     false
+}
+
+fn valid_location_to_try(grid: &Grid<u8>, x: usize, y: usize) -> bool {
+    for dy in 0..3 {
+        for dx in 0..3 {
+            if grid[(y + dy, x + dx)] != b'.' {
+                return true;
+            }
+        }
+    }
+    if y > 0 && (0..3).all(|dx| grid[(y - 1, x + dx)] == b'.') {
+        return false;
+    }
+    if x > 0 && (0..3).all(|dy| grid[(y + dy, x - 1)] == b'.') {
+        return false;
+    }
+    true
 }
 
 fn can_place_shape(grid: &Grid<u8>, shape: &[[u8; 3]; 3], x: usize, y: usize) -> bool {
@@ -222,7 +241,6 @@ mod tests {
     const EXAMPLE: &str = include_str!("../example.txt");
 
     #[test]
-    #[ignore = "Takes too long"]
     fn example() {
         let result = solve(EXAMPLE).unwrap();
         assert_eq!(result, 2);
